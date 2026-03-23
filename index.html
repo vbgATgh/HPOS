@@ -2124,7 +2124,7 @@ let STATE = loadState();
 const DEPOT_BASE=[
   // ── ETFs / Islamic Core ─────────────────────────────────
   // ISWD: Sparplan läuft, aktuell ~25 Stk (nicht 50) — Wert 1235.85€ bestätigt
-  {name:'iShares MSCI World Islamic',wkn:'A0NA46',wert:1235.85,kurs:49.3725,chg:-1.87,stk:25.031,sektor:'etf',halal:'✅',broker:'SC',div_mo:0,div_mon:'Sparplan',aktion:'Sparplan 50€/Mo',kaufkurs:51.28},
+  {name:'iShares MSCI World Islamic',wkn:'A0NA46',wert:1235.85,kurs:49.3725,chg:-1.87,stk:25,sektor:'etf',halal:'✅',broker:'SC',div_mo:0,div_mon:'Sparplan',aktion:'Sparplan 50€/Mo',kaufkurs:51.28},
   {name:'iShares EM Islamic',wkn:'A0NA45',wert:165.57,kurs:23.6525,chg:-2.16,stk:7,sektor:'etf',halal:'✅',broker:'SC',div_mo:0,div_mon:'Sparplan 25€/Mo',aktion:'7 Stk · Sparplan aktiv',kaufkurs:25.98},
   {name:'iShares Sukuk ETF',wkn:'A2DK4D',wert:294.44,kurs:4.33,chg:-0.96,stk:68,sektor:'bond',halal:'✅',broker:'SC',div_mo:0.95,div_mon:'Quartalsw.',aktion:'T1+T2 ✅ · aufbauen',kaufkurs:4.3717},
   {name:'Xiaomi Corp.',wkn:'A2JNY1',wert:180.00,kurs:3.60,chg:-8.69,stk:50,sektor:'etf',halal:'✅',broker:'SC',div_mo:0,div_mon:'—',aktion:'Max 3% · kein Div',kaufkurs:3.85},
@@ -2135,7 +2135,7 @@ const DEPOT_BASE=[
   {name:'Merck & Co (MRK)',wkn:'A0YD8Q',wert:198.70,kurs:99.35,chg:+0.68,stk:2,sektor:'healthcare',halal:'✅',broker:'SC',div_mo:0.47,div_mon:'Jun+Sep+Dez+Mär',aktion:'Halten',kaufkurs:98.97},
   {name:'Abbott Laboratories',wkn:'850261',wert:183.25,kurs:91.625,chg:-1.15,stk:2,sektor:'healthcare',halal:'✅',broker:'SC',div_mo:0.27,div_mon:'Feb+Mai+Aug+Nov',aktion:'NEU 19.03. ✅',kaufkurs:93.00},
   {name:'Skyworks Solutions',wkn:'A14Y8H',wert:47.04,kurs:47.04,chg:-0.16,stk:1,sektor:'healthcare',halal:'✅',broker:'SC',div_mo:0.31,div_mon:'Mär+Jun+Sep+Dez',aktion:'⚠️ Aufstocken auf 3%!',kaufkurs:48.38},
-  {name:'Savaria Corporation',wkn:'A0B8TG',wert:119.40,kurs:15.80,chg:0,stk:7.557251,sektor:'healthcare',halal:'✅',broker:'TR',div_mo:0.07,div_mon:'Monatl.',aktion:'Sparplan 25€/Mo TR',kaufkurs:15.60},
+  {name:'Savaria Corporation',wkn:'A0B8TG',wert:119.40,kurs:15.80,chg:0,stk:7.56,sektor:'healthcare',halal:'✅',broker:'TR',div_mo:0.07,div_mon:'Monatl.',aktion:'Sparplan 25€/Mo TR',kaufkurs:15.60},
   // ── Industrie / Defensiv ─────────────────────────────────
   {name:'Holcim AG',wkn:'A3DJNZ',wert:416.28,kurs:69.38,chg:+0.30,stk:6,sektor:'industrie',halal:'✅',broker:'SC',div_mo:0.22,div_mon:'Mai',aktion:'Halten',kaufkurs:68.83},
   {name:'Fuchs SE',wkn:'579043',wert:424.13,kurs:28.275,chg:-1.57,stk:15,sektor:'industrie',halal:'✅',broker:'SC',div_mo:1.45,div_mon:'Mai',aktion:'Halten · KGV 12,76',kaufkurs:35.32},
@@ -2151,7 +2151,7 @@ const DEPOT_BASE=[
   {name:'iShares Gold ETC',wkn:'A1KWPQ',wert:75.50,kurs:75.4975,chg:-3.59,stk:1,sektor:'gold',halal:'✅',broker:'SC',div_mo:0,div_mon:'—',aktion:'Iran-Hedge ✅',kaufkurs:82.22},
   // ── Energie ──────────────────────────────────────────────
   {name:'EOG Resources',wkn:'877961',wert:120.35,kurs:120.35,chg:+0.34,stk:1,sektor:'energie',halal:'✅',broker:'SC',div_mo:0.46,div_mon:'Apr+Jul+Okt',aktion:'Order aktiv · 114€',kaufkurs:118.83},
-  {name:'Cardinal Energy',wkn:'A2PFXG',wert:217.80,kurs:6.8649,chg:0,stk:31.726415,sektor:'energie',halal:'✅',broker:'TR',div_mo:1.40,div_mon:'Monatl.',aktion:'DRIP-Motor ✅',kaufkurs:6.59},
+  {name:'Cardinal Energy',wkn:'A2PFXG',wert:217.80,kurs:6.86,chg:0,stk:31.73,sektor:'energie',halal:'✅',broker:'TR',div_mo:1.40,div_mon:'Monatl.',aktion:'DRIP-Motor ✅',kaufkurs:6.59},
 ];
 
 const KAUF_BASE=[
@@ -2315,16 +2315,18 @@ function renderDepot(){
     return `<tr style="cursor:pointer;" onclick="openDetail('${d.name}')" title="Detail-Ansicht öffnen">
       <td><span class="stock-logo-wrap">${logoHtml(d.name,20)}<b>${d.name}</b></span></td>
       <td style="color:var(--text3)">${d.wkn}</td>
-      <td><b>${d.wert.toFixed(2)} €</b></td>
-      <td>${d.kurs.toFixed?d.kurs.toFixed(2):d.kurs} €</td>
+      <td><b>${(+d.wert).toFixed(2)} €</b></td>
+      <td>${(+d.kurs).toFixed(2)} €</td>
       <td>${chg}</td>
-      <td style="color:var(--text3)">${typeof d.stk==='number'&&d.stk%1!==0?d.stk.toFixed(2):d.stk}</td>
+      <td style="color:var(--text3)">${typeof d.stk==='number'?(d.stk%1===0?d.stk:d.stk<1?d.stk.toFixed(3):(d.stk%1<0.05||d.stk%1>0.95)?Math.round(d.stk):d.stk.toFixed(2)):d.stk}</td>
       <td><span class="badge ${sb}">${d.sektor}</span></td>
       <td style="font-size:14px">${d.halal}</td>
       <td><span class="badge ${d.broker==='TR'?'b-blue':'b-gray'}">${d.broker}</span></td>
       <td style="font-size:10px;color:var(--text3)">${d.aktion}</td>
     </tr>`;
   }).join('');
+  // Logos nachladen (nach DOM-Insert)
+  setTimeout(fixLogos, 50);
 }
 
 // ── RENDER ORDERS TAB ─────────────────────────────────────
@@ -3922,11 +3924,31 @@ const LOGO_MAP = {
 function logoHtml(name, size=22){
   const url = LOGO_MAP[name];
   const abbr = name.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
-  if(!url) return `<span class="logo-fallback" style="width:${size}px;height:${size}px">${abbr}</span>`;
-  return `<img class="stock-logo" src="${url}" width="${size}" height="${size}"
-    alt="${abbr}" loading="lazy"
-    onerror="this.outerHTML='<span class=\"logo-fallback\" style=\"width:${size}px;height:${size}px\">${abbr}</span>'"
-    style="width:${size}px;height:${size}px">`;
+  // Kein onerror-Attribut (bricht HTML) — stattdessen immer Fallback-Box zeigen
+  // Logo wird nachgeladen via fixLogos() nach DOM-Insert
+  const fb = `<span class="logo-fallback" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px">${abbr}</span>`;
+  if(!url) return fb;
+  // img mit data-src — wird von fixLogos() zu src konvertiert
+  return `<span class="logo-wrap" data-logo-url="${url}" data-logo-abbr="${abbr}" data-logo-size="${size}">${fb}</span>`;
+}
+
+// Logos nachladen: data-logo-url → echtes img, bei Fehler bleibt Fallback
+function fixLogos(){
+  document.querySelectorAll('.logo-wrap[data-logo-url]').forEach(wrap=>{
+    const url  = wrap.dataset.logoUrl;
+    const abbr = wrap.dataset.logoAbbr;
+    const size = parseInt(wrap.dataset.logoSize)||22;
+    const img  = document.createElement('img');
+    img.className = 'stock-logo';
+    img.width  = size;
+    img.height = size;
+    img.style.cssText = `width:${size}px;height:${size}px`;
+    img.alt    = abbr;
+    img.loading = 'lazy';
+    img.onload  = ()=>{ wrap.innerHTML = ''; wrap.appendChild(img); };
+    img.onerror = ()=>{ /* bleibt Fallback */ };
+    img.src = url;
+  });
 }
 
 
