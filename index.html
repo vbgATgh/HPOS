@@ -3859,128 +3859,160 @@ function runAlerts(fromLiveUpdate=false){
 
 
 // ══════════════════════════════════════════════════════════
-// SESSION B — ECHTZEIT-KURSE via allOrigins + Yahoo Finance
-// Ticker-Map: HPOS-Name → Yahoo-Ticker
+// LIVE-KURS-SYSTEM v2.0 — Yahoo Finance + Stooq.com + EZB Währungen
+// Kein Account · Kein API-Key · 3 Quellen kombiniert
 // ══════════════════════════════════════════════════════════
-const TICKER_MAP = {
-  'Novo-Nordisk B':              'NVO',
-  'Novartis AG':                 'NVS',
-  'Barrick Mining':              'GOLD',
-  'Holcim AG':                   'HCMLY',
-  'Fuchs SE':                    'FPE3.DE',
-  'Waste Management':            'WM',
-  'Air Liquide':                 'AIQUY',
-  'Rio Tinto PLC':               'RIO',
-  'Merck & Co (MRK)':            'MRK',
-  'Abbott Laboratories':         'ABT',
-  'Texas Instruments':           'TXN',
-  'Skyworks Solutions':          'SWKS',
-  'McCormick & Co':              'MKC',
-  'BHP Group':                   'BHP',
-  'Cardinal Energy':             'CDV.TO',
-  'Savaria Corporation':         'SIS.TO',
-  'iShares MSCI World Islamic':  'ISWD.L',
-  'iShares EM Islamic':          'ISDE.L',
-  'iShares Sukuk ETF':           'SUKU.L',
-  'iShares Gold ETC':            'IGLN.L',
-  'EOG Resources':               'EOG',
-  'Krones AG':                   'KRN.DE',
-  'Zoetis (ZTS)':                'ZTS',
-  'Gilead Sciences':             'GILD',
+
+const TICKER_MAP_V2 = {
+  'Novo-Nordisk B':             {yahoo:'NVO',     stooq:'nvo.us',  cur:'USD'},
+  'Merck & Co (MRK)':           {yahoo:'MRK',     stooq:'mrk.us',  cur:'USD'},
+  'Abbott Laboratories':        {yahoo:'ABT',     stooq:'abt.us',  cur:'USD'},
+  'Waste Management':           {yahoo:'WM',      stooq:'wm.us',   cur:'USD'},
+  'McCormick & Co':             {yahoo:'MKC',     stooq:'mkc.us',  cur:'USD'},
+  'Skyworks Solutions':         {yahoo:'SWKS',    stooq:'swks.us', cur:'USD'},
+  'EOG Resources':              {yahoo:'EOG',     stooq:'eog.us',  cur:'USD'},
+  'Texas Instruments':          {yahoo:'TXN',     stooq:'txn.us',  cur:'USD'},
+  'Barrick Mining':             {yahoo:'GOLD',    stooq:'gold.us', cur:'USD'},
+  'BHP Group':                  {yahoo:'BHP',     stooq:'bhp.us',  cur:'USD'},
+  'Rio Tinto PLC':              {yahoo:'RIO',     stooq:'rio.uk',  cur:'GBP'},
+  'Fuchs SE':                   {yahoo:'FPE3.DE', stooq:'fpe3.de', cur:'EUR'},
+  'Holcim AG':                  {yahoo:'HCMLY',   stooq:'holn.ch', cur:'CHF'},
+  'Novartis AG':                {yahoo:'NVS',     stooq:'novn.ch', cur:'CHF'},
+  'Air Liquide':                {yahoo:'AIQUY',   stooq:'ai.fr',   cur:'EUR'},
+  'Amrize':                     {yahoo:'HCMLY',   stooq:'holn.ch', cur:'CHF'},
+  'Rational AG':                {yahoo:'RAA.DE',  stooq:'raa.de',  cur:'EUR'},
+  'Xiaomi Corp.':               {yahoo:'1810.HK', stooq:'1810.hk', cur:'HKD'},
+  'Cardinal Energy':            {yahoo:'CDV.TO',  stooq:'cdv.ca',  cur:'CAD'},
+  'Savaria Corporation':        {yahoo:'SIS.TO',  stooq:'sis.ca',  cur:'CAD'},
+  'iShares MSCI World Islamic': {yahoo:'ISWD.L',  stooq:'iswd.uk', cur:'GBp'},
+  'iShares EM Islamic':         {yahoo:'ISDE.L',  stooq:'isde.uk', cur:'GBp'},
+  'iShares Sukuk ETF':          {yahoo:'SUKU.L',  stooq:'suku.uk', cur:'GBp'},
+  'iShares Gold ETC':           {yahoo:'IGLN.L',  stooq:'igln.uk', cur:'GBp'},
 };
+const TICKER_MAP = Object.fromEntries(
+  Object.entries(TICKER_MAP_V2).map(([k,v])=>[k,v.yahoo])
+);
 
+// ── Währungen: frankfurter.app (EZB, direkt, kein Proxy) ─────
+let FX = {USD:1.09, CHF:0.96, CAD:0.74, GBP:1.17, HKD:0.14, GBp:0.0117};
 
-// ══════════════════════════════════════════════════════════
-// LOGOS — Yahoo Finance CDN (stabil, kostenlos, kein API-Key)
-// Format: https://logo.clearbit.com/domain.com (Fallback: Kürzel)
-// ══════════════════════════════════════════════════════════
-const LOGO_MAP = {
-  'iShares MSCI World Islamic': 'https://logo.clearbit.com/ishares.com',
-  'iShares EM Islamic':         'https://logo.clearbit.com/ishares.com',
-  'iShares Sukuk ETF':          'https://logo.clearbit.com/ishares.com',
-  'iShares Gold ETC':           'https://logo.clearbit.com/ishares.com',
-  'Novo-Nordisk B':             'https://logo.clearbit.com/novonordisk.com',
-  'Novartis AG':                'https://logo.clearbit.com/novartis.com',
-  'Merck & Co (MRK)':           'https://logo.clearbit.com/merck.com',
-  'Abbott Laboratories':        'https://logo.clearbit.com/abbott.com',
-  'Skyworks Solutions':         'https://logo.clearbit.com/skyworksinc.com',
-  'Savaria Corporation':        'https://logo.clearbit.com/savaria.com',
-  'Holcim AG':                  'https://logo.clearbit.com/holcim.com',
-  'Fuchs SE':                   'https://logo.clearbit.com/fuchs.com',
-  'Waste Management':           'https://logo.clearbit.com/wm.com',
-  'Air Liquide':                'https://logo.clearbit.com/airliquide.com',
-  'McCormick & Co':             'https://logo.clearbit.com/mccormick.com',
-  'Amrize':                     'https://logo.clearbit.com/holcim.com',
-  'Barrick Mining':             'https://logo.clearbit.com/barrick.com',
-  'Rio Tinto PLC':              'https://logo.clearbit.com/riotinto.com',
-  'BHP Group':                  'https://logo.clearbit.com/bhp.com',
-  'Xiaomi Corp.':               'https://logo.clearbit.com/mi.com',
-  'Rational AG':                'https://logo.clearbit.com/rational-online.com',
-  'EOG Resources':              'https://logo.clearbit.com/eogresources.com',
-  'Cardinal Energy':            'https://logo.clearbit.com/cardinalenergy.ca',
-};
-
-// Logo-HTML generieren (mit Fallback auf Kürzel-Box)
-function logoHtml(name, size=22){
-  const url = LOGO_MAP[name];
-  const abbr = name.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
-  // Kein onerror-Attribut (bricht HTML) — stattdessen immer Fallback-Box zeigen
-  // Logo wird nachgeladen via fixLogos() nach DOM-Insert
-  const fb = `<span class="logo-fallback" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px">${abbr}</span>`;
-  if(!url) return fb;
-  // img mit data-src — wird von fixLogos() zu src konvertiert
-  return `<span class="logo-wrap" data-logo-url="${url}" data-logo-abbr="${abbr}" data-logo-size="${size}">${fb}</span>`;
+async function fetchFX(){
+  try{
+    const r=await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,CHF,CAD,GBP,HKD',
+      {signal:AbortSignal.timeout(5000)});
+    if(!r.ok) return;
+    const d=await r.json();
+    if(d?.rates){
+      FX.USD=d.rates.USD||FX.USD; FX.CHF=d.rates.CHF||FX.CHF;
+      FX.CAD=d.rates.CAD||FX.CAD; FX.GBP=d.rates.GBP||FX.GBP;
+      FX.HKD=d.rates.HKD||FX.HKD; FX.GBp=FX.GBP/100;
+    }
+  }catch(e){}
 }
 
-// Logos nachladen: data-logo-url → echtes img, bei Fehler bleibt Fallback
-function fixLogos(){
-  document.querySelectorAll('.logo-wrap[data-logo-url]').forEach(wrap=>{
-    const url  = wrap.dataset.logoUrl;
-    const abbr = wrap.dataset.logoAbbr;
-    const size = parseInt(wrap.dataset.logoSize)||22;
-    const img  = document.createElement('img');
-    img.className = 'stock-logo';
-    img.width  = size;
-    img.height = size;
-    img.style.cssText = `width:${size}px;height:${size}px`;
-    img.alt    = abbr;
-    img.loading = 'lazy';
-    img.onload  = ()=>{ wrap.innerHTML = ''; wrap.appendChild(img); };
-    img.onerror = ()=>{ /* bleibt Fallback */ };
-    img.src = url;
-  });
+function toEUR(price, cur){
+  const p=+price; if(!p||isNaN(p)) return null;
+  switch(cur){
+    case 'EUR': return +(p).toFixed(4);
+    case 'USD': return +(p/FX.USD).toFixed(4);
+    case 'CHF': return +(p/FX.CHF).toFixed(4);
+    case 'CAD': return +(p/FX.CAD).toFixed(4);
+    case 'GBP': return +(p/FX.GBP).toFixed(4);
+    case 'GBp': return +(p/(FX.GBP*100)).toFixed(4);
+    case 'HKD': return +(p/FX.HKD).toFixed(4);
+    default:    return +(p/FX.USD).toFixed(4);
+  }
 }
 
+// ── Quelle 1: Yahoo Finance via allOrigins Proxy ──────────────
+async function fetchOneTicker(ticker){ return fetchYahoo(ticker); }
+async function fetchYahoo(ticker){
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`;
+  const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  try{
+    const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const j=await r.json();
+    const meta=JSON.parse(j.contents)?.chart?.result?.[0]?.meta;
+    if(!meta?.regularMarketPrice) return null;
+    return {price:meta.regularMarketPrice, prevClose:meta.previousClose||meta.regularMarketPrice,
+            currency:meta.currency||'USD', source:'Yahoo'};
+  }catch(e){return null;}
+}
 
-// EUR/USD für Umrechnung
-const EUR_TICKER = 'EURUSD=X';
+// ── Quelle 2: Stooq.com CSV — Fallback für DE/CH/CA ──────────
+async function fetchStooq(ticker, cur){
+  const url=`https://stooq.com/q/l/?s=${ticker}&f=sd2t2ohlcv&h&e=csv`;
+  const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  try{
+    const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const j=await r.json();
+    const parts=(j.contents||'').trim().split('\n')[1]?.split(',');
+    if(!parts) return null;
+    const close=parseFloat(parts[6]);
+    if(!close||isNaN(close)||close<=0) return null;
+    return {price:close, prevClose:parseFloat(parts[3])||close, currency:cur, source:'Stooq'};
+  }catch(e){return null;}
+}
 
-let LIVE_KURSE = {};     // name → kurs in EUR
-let LIVE_CHG   = {};     // name → chg%
-let EUR_USD    = 1.09;   // Fallback
-let lastFetch  = null;
-let fetchRunning = false;
+// ── Kombiniert: Yahoo → Stooq Fallback ───────────────────────
+async function fetchKurs(name){
+  const cfg=TICKER_MAP_V2[name]; if(!cfg) return null;
+  let res=await fetchYahoo(cfg.yahoo);
+  if(!res?.price) res=await fetchStooq(cfg.stooq, cfg.cur);
+  if(!res?.price) return null;
+  const cur=res.currency||cfg.cur;
+  const eur=toEUR(res.price, cur);
+  const prev=toEUR(res.prevClose||res.price, cur);
+  if(!eur) return null;
+  return {priceEUR:eur, chgPct:prev?+((eur-prev)/prev*100).toFixed(2):0, source:res.source};
+}
+
+// ── Variablen ─────────────────────────────────────────────────
+let LIVE_KURSE={}, LIVE_CHG={}, LIVE_SOURCE={};
+let EUR_USD=1.09, lastFetch=null, fetchRunning=false;
+
+// ── Haupt-Refresh ─────────────────────────────────────────────
+async function fetchLiveKurse(manual=false){
+  if(fetchRunning) return;
+  if(!manual && lastFetch && (Date.now()-lastFetch.getTime())<8*60*1000) return;
+  fetchRunning=true; setRefreshState(true);
+  try{
+    await fetchFX();
+    EUR_USD=FX.USD;
+    const names=Object.keys(TICKER_MAP_V2);
+    const BATCH=4;
+    let ok=0, fail=0;
+    for(let i=0;i<names.length;i+=BATCH){
+      const batch=names.slice(i,i+BATCH);
+      const res=await Promise.all(batch.map(n=>fetchKurs(n)));
+      batch.forEach((name,idx)=>{
+        if(!res[idx]){fail++;return;}
+        LIVE_KURSE[name]=res[idx].priceEUR;
+        LIVE_CHG[name]=res[idx].chgPct;
+        LIVE_SOURCE[name]=res[idx].source;
+        ok++;
+      });
+      if(i+BATCH<names.length) await new Promise(r=>setTimeout(r,500));
+    }
+    Object.entries(LIVE_KURSE).forEach(([n,k])=>{STATE.kurse[n]=k;});
+    lastFetch=new Date();
+    renderAll(); renderTradesLog();
+    if(document.getElementById('p-charts')?.classList.contains('active')) renderCharts();
+    try{runAlerts(true);}catch(e){}
+    const time=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    showToast(`✅ ${ok} Kurse · EUR/USD ${FX.USD.toFixed(3)} · ${time}${fail?' · '+fail+' fehlen':''}`);
+    const badge=document.getElementById('kurs-source-badge');
+    if(badge){badge.textContent=`${ok} Kurse · ${time}`;badge.style.color=fail>3?'var(--amber)':'var(--green)';}
+  }catch(e){showToast('⚠ Kurse nicht verfügbar','var(--amber)');}
+  finally{fetchRunning=false; setRefreshState(false);}
+}
 
 function setRefreshState(loading){
-  const btn = document.getElementById('refresh-btn');
-  const dot = document.getElementById('live-status-dot');
-  if(!btn||!dot) return;
-  if(loading){
-    btn.textContent = '⟳ ...';
-    btn.style.opacity = '0.5';
-    dot.style.background = 'var(--amber)';
-    dot.style.boxShadow = '0 0 8px var(--amber)';
-  } else {
-    btn.textContent = '⟳ Live';
-    btn.style.opacity = '1';
-    dot.style.background = 'var(--green)';
-    dot.style.boxShadow = '0 0 8px var(--green)';
-    const now = new Date();
-    const ts = now.toLocaleDateString('de-DE') + ' · ' + now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-    const el = document.getElementById('live-timestamp');
-    if(el) el.textContent = ts + ' · Live ✅';
-    lastFetch = now;
-  }
+  const btn=document.getElementById('refresh-btn'); if(!btn) return;
+  btn.textContent=loading?'⟳ ...':'⟳ Live';
+  btn.disabled=loading; btn.style.opacity=loading?'0.6':'1';
 }
 
 function setRefreshError(){
