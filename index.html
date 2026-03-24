@@ -80,7 +80,6 @@ input, select, textarea { font-size: 16px !important; }
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
   padding: 16px 24px;
-  padding-top: calc(16px + env(safe-area-inset-top));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -473,10 +472,7 @@ input, select, textarea { font-size: 16px !important; }
 }
 .json-area:focus { border-color: var(--green); }
 .upd-toast {
-  position: fixed; 
-  bottom: calc(24px + env(safe-area-inset-bottom)); 
-  right: calc(24px + env(safe-area-inset-right)); 
-  z-index: 999;
+  position: fixed; bottom: 24px; right: 24px; z-index: 999;
   background: var(--surface); border: 1px solid rgba(74,222,128,0.4);
   color: var(--green); font-family: var(--mono); font-size: 11px;
   padding: 10px 18px; border-radius: 4px;
@@ -817,7 +813,6 @@ input, select, textarea { font-size: 16px !important; }
 <div id="hpos-pw-screen" style="
   position:fixed;top:0;left:0;right:0;bottom:0;
   background:#0a0e0a;z-index:99998;
-  padding-top:env(safe-area-inset-top);
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   padding:32px;font-family:ui-monospace,Menlo,monospace;">
@@ -852,22 +847,21 @@ input, select, textarea { font-size: 16px !important; }
 </div>
 
 <script>
-// ── HPOS Passwortschutz ──────────────────────────────────
-// Passwort ändern: ersetze 'HPOS2026' mit deinem Wunschpasswort
-const HPOS_PW_HASH = 'd06da924ec8ac6e7b25f9c0461dde43f705c4799c5325b8be726e6a342b31bab'; // SHA-256, nicht das echte Passwort
-const HPOS_PW_KEY   = 'hpos_auth_v8';
+// ── HPOS Passwortschutz (SHA-256) ────────────────────────
+// Kein Klartext-Passwort · nur Hash gespeichert
+const HPOS_PW_HASH = 'd06da924ec8ac6e7b25f9c0461dde43f705c4799c5325b8be726e6a342b31bab';
+const HPOS_PW_KEY  = 'hpos_auth_v8';
 
-async function hashPW(pw){
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
 async function checkHposPassword(){
   const input = document.getElementById('hpos-pw-input');
   const err   = document.getElementById('hpos-pw-error');
   if(!input) return;
-  const entered = await hashPW(input.value);
-  if(entered === HPOS_PW_HASH){
-    // Speichere Auth für 30 Tage
+  const val = input.value;
+  if(!val) return;
+  // SHA-256 berechnen
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+  const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(hash === HPOS_PW_HASH){
     const expires = Date.now() + 30*24*60*60*1000;
     localStorage.setItem(HPOS_PW_KEY, String(expires));
     document.getElementById('hpos-pw-screen').remove();
@@ -894,7 +888,6 @@ async function checkHposPassword(){
   position:fixed;top:0;left:0;right:0;bottom:0;
   background:#0a0e0a;display:flex;flex-direction:column;
   align-items:center;justify-content:center;z-index:99999;
-  padding-top:env(safe-area-inset-top);
   font-family:ui-monospace,Menlo,monospace;">
   <div style="font-size:28px;font-weight:700;color:#4ade80;margin-bottom:8px;">HPOS</div>
   <div style="font-size:11px;color:#5a7a5a;letter-spacing:0.15em;">v8.0 · wird geladen...</div>
@@ -920,7 +913,7 @@ async function checkHposPassword(){
       color:var(--amber);cursor:pointer;" title="Alerts anzeigen">
       🔔 <span id="alert-badge" style="display:none;"></span>
     </button>
-    <button onclick="fetchLiveKurse(true)" id="refresh-btn" style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;padding:4px 10px;border:1px solid rgba(74,222,128,0.3);border-radius:3px;background:rgba(74,222,128,0.08);color:var(--green);cursor:pointer;" title="Kurse aktualisieren">⟳ Live</button>
+    <button onclick="fetchLiveKurse(true)" id="refresh-btn" style="font-family:var(--mono);font-size:12px;font-weight:700;padding:9px 20px;border:2px solid rgba(74,222,128,0.5);border-radius:6px;background:rgba(74,222,128,0.15);color:var(--green);cursor:pointer;min-height:40px;min-width:80px;">⟳ Live</button>
   </div>
 </div>
 
@@ -1042,12 +1035,7 @@ async function checkHposPassword(){
   </div>
 
   <div class="section-title">Sofort-Aktionen heute</div>
-  <div class="steps">
-    <div class="step"><div class="step-icon s-aktiv">→</div><div class="step-body"><div class="step-title">Fuchs SE Earnings beobachten · Alert &lt;27,00€</div><div class="step-sub">Szenario A-D aus Baustein 2 anwenden · finanzen.net oder Scalable News</div></div><span class="badge b-amber">Heute</span></div>
-    <div class="step"><div class="step-icon s-aktiv">→</div><div class="step-body"><div class="step-title">FED 20:00 Uhr · Powell-PK beobachten</div><div class="step-sub">Zinsen unverändert 3,5-3,75% erwartet · Barrick/Gold Reaktion</div></div><span class="badge b-amber">20:00</span></div>
-    <div class="step"><div class="step-icon s-aktiv">→</div><div class="step-body"><div class="step-title">Scalable "Meine Steuern" prüfen · Steuer-Reserve 24,23€</div><div class="step-sub">FSA-Stand bestätigen · genauen Verbrauch sehen</div></div><span class="badge b-blue">Diese Woche</span></div>
-    <div class="step"><div class="step-icon s-aktiv">→</div><div class="step-body"><div class="step-title">NVO Ex-Dividende 27.03. · 25 Stk bereit ✅</div><div class="step-sub">25 × ~1,07€ = ~26,75€ netto → DRIP Schwellenwert fast erreicht!</div></div><span class="badge b-green">27.03.</span></div>
-  </div>
+  <div class="steps" id="sofort-aktionen-list"><div class="step"><div class="step-icon s-aktiv">⟳</div><div class="step-body"><div class="step-title">Lädt...</div></div></div></div>
 </div>
 
 <!-- ═══════════════ DEPOT ═══════════════ -->
@@ -1140,6 +1128,7 @@ async function checkHposPassword(){
   <th class="sortable" onclick="sortT('kauf-tbl',7,this)"><span class="tt tt-down" data-tt="Erwartete Jahresdividende nach Kauf&#10;(Netto nach Steuer ca. −26%)">Div/Jahr</span></th>
   <th><span class="tt tt-down" data-tt="Dividenden-Monate dieser Aktie">Monate</span></th>
   <th><span class="tt tt-down" data-tt="Ampel: 🟢 Kaufzone erreicht&#10;🟡 Warten · 🔴 Zu weit entfernt&#10;✅ Bereits im Depot">Ampel</span></th>
+  <th>Kaufdatum</th>
 </tr></thead>
       <tbody id="kauf-body"></tbody>
     </table>
@@ -1181,9 +1170,11 @@ async function checkHposPassword(){
 
 <!-- ═══════════════ WATCHLIST ═══════════════ -->
 <div class="page" id="p-watchlist">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;"><div style="flex:1;min-width:140px;"><div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">NAME</div><input class="upd-inp" id="wl-add-name" placeholder="z.B. Johnson &amp; Johnson" style="width:100%"></div><div style="width:100px;"><div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">WKN</div><input class="upd-inp" id="wl-add-wkn" placeholder="853260" style="width:100%"></div><div style="width:110px;"><div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">SEKTOR</div><select class="upd-sel" id="wl-add-sektor" style="width:100%"><option value="healthcare">Healthcare</option><option value="industrie">Industrie</option><option value="etf">ETF/Islamic</option><option value="gold">Gold/Mining</option><option value="energie">Energie</option><option value="andere">Andere</option></select></div><button class="upd-btn upd-btn-g" onclick="wlAdd()" style="height:34px;padding:0 14px">+ Hinzufügen</button>  </div>
   <input type="text" class="search-input" id="wl-search" placeholder="Suche nach Name oder Sektor..." oninput="wlApply()">
   <div class="filters">
     <button class="flt on" onclick="wlFlt('all',this)">Alle</button>
+    <button class="flt" onclick="wlFlt('watch',this)">Nur Watch</button>
     <button class="flt" onclick="wlFlt('green',this)">Kaufzone</button>
     <button class="flt" onclick="wlFlt('order',this)">Order aktiv</button>
     <button class="flt" onclick="wlFlt('depot',this)">Im Depot</button>
@@ -1284,7 +1275,7 @@ async function checkHposPassword(){
 
   <div class="section-title">Score-Fortschritt</div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;">
-    <div class="bar-row"><span class="bar-label" style="width:130px;">Heute 19.03.</span><div class="bar-wrap"><div class="bar-fill" style="width:81%;background:var(--amber);"></div></div><span class="bar-pct amb">81</span><span class="bar-note amb">Sehr Gut</span></div>
+    <div class="bar-row"><span class="bar-label" style="width:130px;"><span id="score-heute-label">Heute</span></span><div class="bar-wrap"><div class="bar-fill" style="width:81%;background:var(--amber);"></div></div><span class="bar-pct amb">81</span><span class="bar-note amb">Sehr Gut</span></div>
     <div class="bar-row"><span class="bar-label" style="width:130px;">Nach Orders Apr</span><div class="bar-wrap"><div class="bar-fill" style="width:85%;background:#10b981;"></div></div><span class="bar-pct pos">85</span><span class="bar-note pos">Stark</span></div>
     <div class="bar-row"><span class="bar-label" style="width:130px;">Sommer 2026</span><div class="bar-wrap"><div class="bar-fill" style="width:89%;background:#10b981;"></div></div><span class="bar-pct pos">89</span><span class="bar-note pos">Sehr Stark</span></div>
     <div class="bar-row"><span class="bar-label" style="width:130px;">Dez 2026</span><div class="bar-wrap"><div class="bar-fill" style="width:94%;background:var(--green);"></div></div><span class="bar-pct pos">94</span><span class="bar-note pos">EXZELLENT ✅</span></div>
@@ -1324,12 +1315,9 @@ async function checkHposPassword(){
     </table>
   </div>
 
-  <div class="section-title">Drawdown-Ampel (Baustein 4)</div>
-  <div class="kpi-grid g3">
-    <div class="kpi" style="border-color:rgba(74,222,128,0.3);"><div class="kpi-label">Gelb: −5% bis −15%</div><div class="kpi-val" style="font-size:14px;color:var(--green);font-family:var(--mono);font-weight:500;">Nichts tun</div><div class="kpi-sub">Sparplan weiter · Limits aktiv</div></div>
-    <div class="kpi" style="border-color:rgba(251,191,36,0.3);"><div class="kpi-label">Orange: −15% bis −30%</div><div class="kpi-val" style="font-size:14px;color:var(--amber);font-family:var(--mono);font-weight:500;">427€ kaufen</div><div class="kpi-sub">50% Feuerkraft · beste KZ1</div></div>
-    <div class="kpi" style="border-color:rgba(248,113,113,0.3);"><div class="kpi-label">Rot: −30%+</div><div class="kpi-val" style="font-size:14px;color:var(--red);font-family:var(--mono);font-weight:500;">+427€ kaufen</div><div class="kpi-sub">Rest 50% · Century-Chance!</div></div>
-  </div>
+  <div class="section-title">Drawdown-Ampel — Live-Status</div>
+  <div id="makro-drawdown-live" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:12px;"><div style="font-family:var(--mono);font-size:10px;color:var(--text3)">⟳ Wird berechnet...</div></div>
+  <div class="kpi-grid g3"><div class="kpi" id="ampel-gruen" style="border-color:rgba(74,222,128,0.3);"><div class="kpi-label">🟢 Grün: 0% bis −5%</div><div class="kpi-val" style="font-size:13px;color:var(--green);">Normal</div><div class="kpi-sub">Sparplan weiter · Limits aktiv</div></div><div class="kpi" id="ampel-gelb" style="border-color:rgba(251,191,36,0.3);"><div class="kpi-label">🟡 Gelb: −5% bis −15%</div><div class="kpi-val" style="font-size:13px;color:var(--amber);">Beobachten</div><div class="kpi-sub">Ruhe · keine Panik</div></div><div class="kpi" id="ampel-orange" style="border-color:rgba(249,115,22,0.3);"><div class="kpi-label">🟠 Orange: −15% bis −30%</div><div class="kpi-val" style="font-size:13px;color:#f97316;">427€ einsetzen</div><div class="kpi-sub">50% Feuerkraft · beste KZ1</div></div><div class="kpi" id="ampel-rot" style="border-color:rgba(248,113,113,0.3);"><div class="kpi-label">🔴 Rot: −30%+ · Century-Chance!</div><div class="kpi-val" style="font-size:13px;color:var(--red);">Alles einsetzen!</div><div class="kpi-sub">Buffett-Moment · Maximum kaufen!</div></div></div>
 </div>
 
 <!-- ═══════════════ LANGZEITZIEL ═══════════════ -->
@@ -1505,7 +1493,6 @@ async function checkHposPassword(){
   background:rgba(0,0,0,0.75); z-index:9998;
   display:flex; align-items:center; justify-content:center;
   padding:16px;
-  padding-top: calc(16px + env(safe-area-inset-top));
   animation: fadeIn 0.25s ease;
 }
 @keyframes fadeIn { from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
@@ -1514,9 +1501,7 @@ async function checkHposPassword(){
   border-radius:10px; padding:20px;
   padding-bottom:calc(20px + env(safe-area-inset-bottom));
   max-width:440px; width:100%;
-  max-height:calc(85vh - env(safe-area-inset-top));
-  margin-top: env(safe-area-inset-top);
-  overflow-y:auto;
+  max-height:85vh; overflow-y:auto;
   box-shadow:0 8px 40px rgba(0,0,0,0.8);
 }
 .alert-popup-title {
@@ -1852,8 +1837,7 @@ a { color: var(--blue); }
     background:var(--bg2);overflow-y:auto;
     box-shadow:-4px 0 32px rgba(0,0,0,0.8);
     transform:translateX(100%);transition:transform 0.3s ease;touch-action:pan-y;
-    display:flex;flex-direction:column;
-    padding-top: env(safe-area-inset-top);">
+    display:flex;flex-direction:column;">
 
     <!-- Header -->
     <div style="position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--border);
@@ -2138,7 +2122,7 @@ let STATE = loadState();
 const DEPOT_BASE=[
   // ── ETFs / Islamic Core ─────────────────────────────────
   // ISWD: Sparplan läuft, aktuell ~25 Stk (nicht 50) — Wert 1235.85€ bestätigt
-  {name:'iShares MSCI World Islamic',wkn:'A0NA46',wert:1235.85,kurs:49.3725,chg:-1.87,stk:25,sektor:'etf',halal:'✅',broker:'SC',div_mo:0,div_mon:'Sparplan',aktion:'Sparplan 50€/Mo',kaufkurs:51.28},
+  {name:'iShares MSCI World Islamic',wkn:'A0NA46',wert:1235.85,kurs:49.3725,chg:-1.87,stk:25.031,sektor:'etf',halal:'✅',broker:'SC',div_mo:0,div_mon:'Sparplan',aktion:'Sparplan 50€/Mo',kaufkurs:51.28},
   {name:'iShares EM Islamic',wkn:'A0NA45',wert:165.57,kurs:23.6525,chg:-2.16,stk:7,sektor:'etf',halal:'✅',broker:'SC',div_mo:0,div_mon:'Sparplan 25€/Mo',aktion:'7 Stk · Sparplan aktiv',kaufkurs:25.98},
   {name:'iShares Sukuk ETF',wkn:'A2DK4D',wert:294.44,kurs:4.33,chg:-0.96,stk:68,sektor:'bond',halal:'✅',broker:'SC',div_mo:0.95,div_mon:'Quartalsw.',aktion:'T1+T2 ✅ · aufbauen',kaufkurs:4.3717},
   {name:'Xiaomi Corp.',wkn:'A2JNY1',wert:180.00,kurs:3.60,chg:-8.69,stk:50,sektor:'etf',halal:'✅',broker:'SC',div_mo:0,div_mon:'—',aktion:'Max 3% · kein Div',kaufkurs:3.85},
@@ -2149,7 +2133,7 @@ const DEPOT_BASE=[
   {name:'Merck & Co (MRK)',wkn:'A0YD8Q',wert:198.70,kurs:99.35,chg:+0.68,stk:2,sektor:'healthcare',halal:'✅',broker:'SC',div_mo:0.47,div_mon:'Jun+Sep+Dez+Mär',aktion:'Halten',kaufkurs:98.97},
   {name:'Abbott Laboratories',wkn:'850261',wert:183.25,kurs:91.625,chg:-1.15,stk:2,sektor:'healthcare',halal:'✅',broker:'SC',div_mo:0.27,div_mon:'Feb+Mai+Aug+Nov',aktion:'NEU 19.03. ✅',kaufkurs:93.00},
   {name:'Skyworks Solutions',wkn:'A14Y8H',wert:47.04,kurs:47.04,chg:-0.16,stk:1,sektor:'healthcare',halal:'✅',broker:'SC',div_mo:0.31,div_mon:'Mär+Jun+Sep+Dez',aktion:'⚠️ Aufstocken auf 3%!',kaufkurs:48.38},
-  {name:'Savaria Corporation',wkn:'A0B8TG',wert:119.40,kurs:15.80,chg:0,stk:7.56,sektor:'healthcare',halal:'✅',broker:'TR',div_mo:0.07,div_mon:'Monatl.',aktion:'Sparplan 25€/Mo TR',kaufkurs:15.60},
+  {name:'Savaria Corporation',wkn:'A0B8TG',wert:119.40,kurs:15.80,chg:0,stk:7.557251,sektor:'healthcare',halal:'✅',broker:'TR',div_mo:0.07,div_mon:'Monatl.',aktion:'Sparplan 25€/Mo TR',kaufkurs:15.60},
   // ── Industrie / Defensiv ─────────────────────────────────
   {name:'Holcim AG',wkn:'A3DJNZ',wert:416.28,kurs:69.38,chg:+0.30,stk:6,sektor:'industrie',halal:'✅',broker:'SC',div_mo:0.22,div_mon:'Mai',aktion:'Halten',kaufkurs:68.83},
   {name:'Fuchs SE',wkn:'579043',wert:424.13,kurs:28.275,chg:-1.57,stk:15,sektor:'industrie',halal:'✅',broker:'SC',div_mo:1.45,div_mon:'Mai',aktion:'Halten · KGV 12,76',kaufkurs:35.32},
@@ -2165,32 +2149,27 @@ const DEPOT_BASE=[
   {name:'iShares Gold ETC',wkn:'A1KWPQ',wert:75.50,kurs:75.4975,chg:-3.59,stk:1,sektor:'gold',halal:'✅',broker:'SC',div_mo:0,div_mon:'—',aktion:'Iran-Hedge ✅',kaufkurs:82.22},
   // ── Energie ──────────────────────────────────────────────
   {name:'EOG Resources',wkn:'877961',wert:120.35,kurs:120.35,chg:+0.34,stk:1,sektor:'energie',halal:'✅',broker:'SC',div_mo:0.46,div_mon:'Apr+Jul+Okt',aktion:'Order aktiv · 114€',kaufkurs:118.83},
-  {name:'Cardinal Energy',wkn:'A2PFXG',wert:217.80,kurs:6.86,chg:0,stk:31.73,sektor:'energie',halal:'✅',broker:'TR',div_mo:1.40,div_mon:'Monatl.',aktion:'DRIP-Motor ✅',kaufkurs:6.59},
+  {name:'Cardinal Energy',wkn:'A2PFXG',wert:217.80,kurs:6.8649,chg:0,stk:31.726415,sektor:'energie',halal:'✅',broker:'TR',div_mo:1.40,div_mon:'Monatl.',aktion:'DRIP-Motor ✅',kaufkurs:6.59},
 ];
 
 const KAUF_BASE=[
-  // PHASE 1 — alle ausgeführt
-  {name:'NVO',wkn:'A3EU6F',phase:'p1',kurs:31.58,limit:null,stk:25,budget:790,div:26.75,mon:'Apr+Jul+Okt+Jan',ampel:'done'},
-  {name:'MRK',wkn:'A0YD8Q',phase:'p1',kurs:99.35,limit:null,stk:2,budget:199,div:5.60,mon:'Jun+Sep+Dez+Mär',ampel:'done'},
-  {name:'Gold ETC',wkn:'A1KWPQ',phase:'p1',kurs:75.50,limit:null,stk:1,budget:76,div:0,mon:'—',ampel:'done'},
-  {name:'Waste Mgmt',wkn:'893579',phase:'p1',kurs:199.87,limit:null,stk:1,budget:200,div:3.00,mon:'Mär+Jun+Sep+Dez',ampel:'done'},
-  {name:'Air Liquide',wkn:'850133',phase:'p1',kurs:165.67,limit:null,stk:1,budget:166,div:4.20,mon:'Mai/Jun',ampel:'done'},
-  {name:'Sukuk ETF T1+T2',wkn:'A2DK4D',phase:'p1',kurs:4.33,limit:null,stk:68,budget:294,div:11.36,mon:'Quartalsw.',ampel:'done'},
-  {name:'BHP Group',wkn:'908131',phase:'p3',kurs:28.32,limit:null,stk:5,budget:142,div:3.60,mon:'Mär+Sep',ampel:'done'},
-  // PHASE 2 — Abbott + MKC done, Rest offen
-  {name:'Abbott (ABT)',wkn:'850261',phase:'p2',kurs:91.625,limit:null,stk:2,budget:186,div:4.72,mon:'Feb+Mai+Aug+Nov',ampel:'done'},
-  {name:'McCormick',wkn:'858250',phase:'p2',kurs:46.71,limit:null,stk:6,budget:141,div:4.25,mon:'Jan+Apr+Jul+Okt',ampel:'done'},
-  {name:'EOG Resources',wkn:'877961',phase:'p1',kurs:121.13,limit:114.00,stk:1,budget:114,div:5.50,mon:'Apr+Jul+Okt',ampel:'amber'},
-  {name:'TXN',wkn:'852654',phase:'p1',kurs:163.48,limit:155.00,stk:1,budget:155,div:7.50,mon:'Feb+Mai+Aug+Nov',ampel:'red'},
-  {name:'Church & Dwight',wkn:'868638',phase:'p2',kurs:72.00,limit:70.00,stk:1,budget:70,div:1.15,mon:'Mär+Jun+Sep+Dez',ampel:'amber'},
-  {name:'JNJ',wkn:'853260',phase:'p2',kurs:209.00,limit:205.00,stk:1,budget:205,div:4.96,mon:'Jun+Sep+Dez+Mär',ampel:'amber'},
-  {name:'Krones AG',wkn:'633500',phase:'p2',kurs:118.10,limit:119.90,stk:1,budget:120,div:1.52,mon:'Mai (1×/Jahr)',ampel:'green'},
-  {name:'Zoetis (ZTS)',wkn:'A1W90W',phase:'p3',kurs:102.13,limit:100.00,stk:1,budget:100,div:1.20,mon:'Mär+Jun+Sep+Dez',ampel:'amber'},
-  {name:'Sukuk ETF T3',wkn:'A2DK4D',phase:'p1',kurs:4.393,limit:4.40,stk:34,budget:150,div:5.70,mon:'Quartalsw.',ampel:'green'},
-  {name:'Gilead Sciences',wkn:'A0YD8T',phase:'p2',kurs:122.91,limit:120.00,stk:1,budget:120,div:3.70,mon:'Jun+Sep+Dez+Mär',ampel:'amber'},
-  {name:'Eli Lilly',wkn:'A14Y8I',phase:'p3',kurs:795.05,limit:750.00,stk:1,budget:150,div:2.80,mon:'Feb+Mai+Aug+Nov',ampel:'red'},
+  {name:'NVO',wkn:'A3EU6F',phase:'p1',kurs:31.58,limit:null,stk:25,budget:817,div:26.75,mon:'Apr+Jul+Okt+Jan',ampel:'done',kaufdatum:'19.02.2026'},
+  {name:'MRK',wkn:'A0YD8Q',phase:'p1',kurs:98.20,limit:null,stk:2,budget:200,div:5.60,mon:'Jun+Sep+Dez+Mär',ampel:'done',kaufdatum:'15.01.2026'},
+  {name:'Gold ETC',wkn:'A1KWPQ',phase:'p1',kurs:71.93,limit:null,stk:1,budget:85,div:0,mon:'—',ampel:'done',kaufdatum:'20.02.2026'},
+  {name:'Waste Mgmt',wkn:'893579',phase:'p1',kurs:200.06,limit:null,stk:1,budget:206,div:3.00,mon:'Mär+Jun+Sep+Dez',ampel:'done',kaufdatum:'18.03.2026'},
+  {name:'Air Liquide',wkn:'850133',phase:'p1',kurs:164.07,limit:null,stk:1,budget:171,div:4.20,mon:'Mai/Jun',ampel:'done',kaufdatum:'18.03.2026'},
+  {name:'Sukuk ETF',wkn:'A2DK4D',phase:'p1',kurs:4.3352,limit:null,stk:68,budget:294,div:5.70,mon:'Quartalsw.',ampel:'done',kaufdatum:'18.03.2026'},
+  {name:'BHP Group',wkn:'908131',phase:'p3',kurs:27.76,limit:29.00,stk:5,budget:145,div:3.60,mon:'Mär+Sep',ampel:'done',kaufdatum:'19.03.2026'},
+  {name:'McCormick',wkn:'858250',phase:'p2',kurs:46.14,limit:48.50,stk:6,budget:277,div:3.09,mon:'Jan+Apr+Jul+Okt',ampel:'done',kaufdatum:'19.03.2026'},
+  {name:'EOG Resources',wkn:'877961',phase:'p1',kurs:122.39,limit:114.00,stk:1,budget:114,div:5.50,mon:'Apr+Jul+Okt',ampel:'green',kaufdatum:'—'},
+  {name:'TXN',wkn:'852654',phase:'p1',kurs:122.39,limit:155.00,stk:1,budget:155,div:7.50,mon:'Feb+Mai+Aug+Nov',ampel:'red',kaufdatum:'—'},
+  {name:'Abbott (ABT)',wkn:'850261',phase:'p2',kurs:91.60,limit:93.00,stk:2,budget:186,div:4.72,mon:'Feb+Mai+Aug+Nov',ampel:'green',kaufdatum:'—'},
+  {name:'Church & Dwight',wkn:'868638',phase:'p2',kurs:72.00,limit:70.00,stk:1,budget:70,div:1.15,mon:'Mär+Jun+Sep+Dez',ampel:'amber',kaufdatum:'—'},
+  {name:'JNJ',wkn:'853260',phase:'p2',kurs:209.00,limit:205.00,stk:1,budget:205,div:4.96,mon:'Jun+Sep+Dez+Mär',ampel:'amber',kaufdatum:'—'},
+  {name:'Krones AG',wkn:'633500',phase:'p2',kurs:122.30,limit:119.90,stk:1,budget:120,div:1.52,mon:'Mai (1×/Jahr)',ampel:'amber',kaufdatum:'—'},
+  {name:'Zoetis (ZTS)',wkn:'A1W90W',phase:'p3',kurs:103.74,limit:100.00,stk:1,budget:100,div:1.20,mon:'Mär+Jun+Sep+Dez',ampel:'amber',kaufdatum:'—'},
+  {name:'Eli Lilly',wkn:'A14Y8I',phase:'p3',kurs:791.05,limit:750.00,stk:1,budget:150,div:2.80,mon:'Feb+Mai+Aug+Nov',ampel:'red',kaufdatum:'—'},
 ];
-
 const WL_BASE=[
   {name:'Abbott (ABT)',sub:'Healthcare',kurs:95.26,chg:-0.87,kz1:93.00,halal:'✅',status:'order'},
   {name:'Air Liquide',sub:'Industrie',kurs:170.73,chg:-0.89,kz1:170.00,halal:'✅',status:'depot'},
@@ -2329,18 +2308,16 @@ function renderDepot(){
     return `<tr style="cursor:pointer;" onclick="openDetail('${d.name}')" title="Detail-Ansicht öffnen">
       <td><span class="stock-logo-wrap">${logoHtml(d.name,20)}<b>${d.name}</b></span></td>
       <td style="color:var(--text3)">${d.wkn}</td>
-      <td><b>${(+d.wert).toFixed(2)} €</b></td>
-      <td>${(+d.kurs).toFixed(2)} €</td>
+      <td><b>${d.wert.toFixed(2)} €</b></td>
+      <td>${d.kurs.toFixed?d.kurs.toFixed(2):d.kurs} €</td>
       <td>${chg}</td>
-      <td style="color:var(--text3)">${typeof d.stk==='number'?(d.stk%1===0?d.stk:d.stk<1?d.stk.toFixed(3):(d.stk%1<0.05||d.stk%1>0.95)?Math.round(d.stk):d.stk.toFixed(2)):d.stk}</td>
+      <td style="color:var(--text3)">${typeof d.stk==='number'&&d.stk%1!==0?d.stk.toFixed(2):d.stk}</td>
       <td><span class="badge ${sb}">${d.sektor}</span></td>
       <td style="font-size:14px">${d.halal}</td>
       <td><span class="badge ${d.broker==='TR'?'b-blue':'b-gray'}">${d.broker}</span></td>
       <td style="font-size:10px;color:var(--text3)">${d.aktion}</td>
     </tr>`;
   }).join('');
-  // Logos nachladen (nach DOM-Insert)
-  setTimeout(fixLogos, 50);
 }
 
 // ── RENDER ORDERS TAB ─────────────────────────────────────
@@ -2412,6 +2389,7 @@ function renderKauf(){
       <td>${d.stk}</td><td>${d.budget} €</td>
       <td class="pos">${d.div>0?d.div.toFixed(2)+' €':'—'}</td>
       <td style="color:var(--text3);font-size:10px">${d.mon}</td>
+      <td style="color:var(--text3);font-size:10px">${d.kaufdatum||"—"}</td>
       <td>${ampel}</td>
     </tr>`;
   }).join('');
@@ -2453,6 +2431,30 @@ function renderDivTab(){
 }
 
 // ── RENDER WATCHLIST ──────────────────────────────────────
+
+const WL_CUSTOM_KEY='hpos_wl_custom_v8',WL_HIDDEN_KEY='hpos_wl_hidden_v8';
+function getWlCustom(){try{return JSON.parse(localStorage.getItem(WL_CUSTOM_KEY)||'[]');}catch(e){return[];}}
+function saveWlCustom(a){try{localStorage.setItem(WL_CUSTOM_KEY,JSON.stringify(a));}catch(e){}}
+function getWlHidden(){try{return JSON.parse(localStorage.getItem(WL_HIDDEN_KEY)||'[]');}catch(e){return[];}}
+function wlAdd(){
+  const name=(document.getElementById('wl-add-name')?.value||'').trim();
+  const wkn=(document.getElementById('wl-add-wkn')?.value||'').trim();
+  const sektor=document.getElementById('wl-add-sektor')?.value||'andere';
+  if(!name){showToast('⚠ Name eingeben','var(--amber)');return;}
+  const c=getWlCustom();
+  if(c.some(x=>x.name.toLowerCase()===name.toLowerCase())){showToast('⚠ Bereits vorhanden','var(--amber)');return;}
+  c.push({name,wkn:wkn||'—',sub:sektor,kurs:null,chg:null,kz1:null,halal:'?',status:'watchlist',custom:true});
+  saveWlCustom(c);
+  const ni=document.getElementById('wl-add-name');if(ni)ni.value='';
+  const wi=document.getElementById('wl-add-wkn');if(wi)wi.value='';
+  wlApply();showToast('✅ '+name+' hinzugefügt');
+}
+function wlDelete(name){
+  const c=getWlCustom(),nc=c.filter(x=>x.name!==name);
+  if(nc.length<c.length){saveWlCustom(nc);}
+  else{const h=getWlHidden();if(!h.includes(name)){h.push(name);localStorage.setItem(WL_HIDDEN_KEY,JSON.stringify(h));}}
+  wlApply();showToast('🗑 Entfernt');
+}
 let wlCat='all';
 function wlFlt(cat,btn){
   document.querySelectorAll('#p-watchlist .flt').forEach(b=>b.classList.remove('on'));
@@ -2460,26 +2462,34 @@ function wlFlt(cat,btn){
 }
 function wlApply(){
   const WL=getLiveWL();
-  const q=document.getElementById('wl-search').value.toLowerCase();
-  let arr=WL;
-  if(wlCat==='green') arr=arr.filter(d=>d.kurs&&d.kz1&&((d.kurs-d.kz1)/d.kz1*100)<=3);
+  const custom=(typeof getWlCustom==='function')?getWlCustom():[];
+  const hidden=(typeof getWlHidden==='function')?getWlHidden():[];
+  const combined=[...WL.filter(d=>!hidden.includes(d.name)),...custom.filter(c=>!WL.some(w=>w.name===c.name))];
+  const q=(document.getElementById('wl-search')?.value||'').toLowerCase();
+  let arr=combined;
+  if(wlCat==='watch') arr=arr.filter(d=>d.status==='watchlist');
+  else if(wlCat==='green') arr=arr.filter(d=>d.kurs&&d.kz1&&((d.kurs-d.kz1)/d.kz1*100)<=3);
   else if(wlCat==='order') arr=arr.filter(d=>d.status==='order');
   else if(wlCat==='depot') arr=arr.filter(d=>d.status==='depot');
   else if(wlCat==='block') arr=arr.filter(d=>d.status==='block');
-  if(q) arr=arr.filter(d=>d.name.toLowerCase().includes(q)||d.sub.toLowerCase().includes(q));
+  if(q) arr=arr.filter(d=>d.name.toLowerCase().includes(q)||(d.sub||'').toLowerCase().includes(q));
   document.getElementById('wl-body').innerHTML=arr.map(d=>{
-    const chg=d.chg===null?'—':d.chg>0?`<span class="pos">+${d.chg.toFixed(2)}%</span>`:`<span class="neg">${d.chg.toFixed(2)}%</span>`;
+    const cv=(d.chg==null)?null:(+d.chg);
+    const chg=cv===null?'—':cv>0?`<span class="pos">+${cv.toFixed(2)}%</span>`:`<span class="neg">${cv.toFixed(2)}%</span>`;
     const abst=d.kurs&&d.kz1?((d.kurs-d.kz1)/d.kz1*100).toFixed(1)+'%':'—';
     const amp=d.kurs&&d.kz1?(d.kurs-d.kz1)/d.kz1*100<=2?'dot-g':(d.kurs-d.kz1)/d.kz1*100<=6?'dot-a':'dot-r':'dot-x';
     const sb={order:'b-blue',depot:'b-green',block:'b-red',watchlist:'b-gray'}[d.status]||'b-gray';
-    const sl={order:'Order',depot:'Depot ✅',block:'Geblockt ❌',watchlist:'Watch'}[d.status];
+    const sl={order:'Order',depot:'Depot',block:'Geblockt',watchlist:'Watch'}[d.status]||'Watch';
+    const sn=encodeURIComponent(d.name);
     return `<tr>
-      <td><b>${d.name}</b></td><td style="color:var(--text3);font-size:10px">${d.sub}</td>
-      <td>${d.kurs?d.kurs.toFixed(2)+' €':'—'}</td><td>${chg}</td>
-      <td>${d.kz1?d.kz1.toFixed(2)+' €':'—'}</td>
+      <td><b>${d.name}</b>${d.custom?'<span class="badge b-blue" style="margin-left:4px;font-size:8px">NEU</span>':''}</td>
+      <td style="color:var(--text3);font-size:10px">${d.sub||'—'}</td>
+      <td>${d.kurs?(+d.kurs).toFixed(2)+' €':'—'}</td><td>${chg}</td>
+      <td>${d.kz1?(+d.kz1).toFixed(2)+' €':'—'}</td>
       <td>${d.kurs&&d.kz1?`<span class="dot ${amp}"></span>${abst}`:'—'}</td>
       <td><span class="badge ${sb}">${sl}</span></td>
-      <td style="font-size:14px">${d.halal}</td>
+      <td style="font-size:14px">${d.halal||'?'}</td>
+      <td><button onclick="wlDelete(decodeURIComponent('${sn}'))" style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:var(--red);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;">✕</button></td>
     </tr>`;
   }).join('');
 }
@@ -2509,11 +2519,52 @@ function renderBausteine(){
 
 // ── RENDER MAKRO ──────────────────────────────────────────
 function renderMakro(){
-  // Cash KPI in Makro page if present
-  const DEPOT=getLiveDepot();
-  const totalWert=DEPOT.reduce((s,d)=>s+d.wert,0);
-  const el=document.getElementById('live-depot-total-makro');
-  if(el) el.textContent=totalWert.toFixed(0)+' €';
+  const DEPOT=getLiveDepot(),total=DEPOT.reduce((s,d)=>s+d.wert,0);
+  try{
+    const AK='hpos_ath_v8';
+    const storedAth=parseFloat(localStorage.getItem(AK)||'0');
+    const ath=Math.max(storedAth,total);
+    if(ath>storedAth) localStorage.setItem(AK,String(ath));
+    const dd=ath>0?((total-ath)/ath*100):0;
+    let phase,col,icon,action,fk;
+    if(dd>-5){phase='GRÜN — Normal';col='var(--green)';icon='🟢';action='Sparplan läuft · Limits aktiv · nichts tun';fk='';}
+    else if(dd>-15){phase='GELB — Beobachten';col='var(--amber)';icon='🟡';action='Ruhe bewahren · Limits aktiv · noch nicht kaufen';fk='';}
+    else if(dd>-30){phase='ORANGE — Kaufen!';col='#f97316';icon='🟠';action='50% Feuerkraft · beste KZ1 kaufen';fk='→ ~427€ jetzt einsetzen!';}
+    else{phase='ROT — Century-Chance!';col='var(--red)';icon='🔴';action='ALLE Feuerkraft einsetzen · Buffett-Moment!';fk='→ ~854€ ALLES einsetzen!';}
+    const lEl=document.getElementById('makro-drawdown-live');
+    if(lEl){
+      lEl.style.borderColor=col;
+      lEl.innerHTML=`<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="text-align:center;min-width:80px;">
+          <div style="font-family:var(--mono);font-size:32px;font-weight:700;color:${col}">${dd<=0?'':'+'}${dd.toFixed(1)}%</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">vom ATH · ${ath.toFixed(0)}€</div>
+        </div>
+        <div style="flex:1;min-width:180px;">
+          <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${col};margin-bottom:5px">${icon} ${phase}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:3px">→ ${action}</div>
+          ${fk?`<div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${col}">${fk}</div>`:''}
+          <div style="margin-top:8px;height:6px;background:var(--surface2);border-radius:3px;position:relative;">
+            <div style="width:${Math.min(100,Math.abs(dd)/30*100).toFixed(1)}%;height:100%;background:${col};border-radius:3px;transition:width 0.5s"></div>
+            <div style="position:absolute;top:-3px;left:${(5/30*100).toFixed(1)}%;width:2px;height:12px;background:var(--amber);opacity:0.7"></div>
+            <div style="position:absolute;top:-3px;left:${(15/30*100).toFixed(1)}%;width:2px;height:12px;background:#f97316;opacity:0.7"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;margin-top:2px">
+            <span style="color:var(--text3)">0%</span><span style="color:var(--amber)">−5%</span><span style="color:#f97316">−15%</span><span style="color:var(--red)">−30%</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Depot</div>
+          <div style="font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text)">${total.toFixed(0)}€</div>
+        </div>
+      </div>`;
+    }
+    ['gruen','gelb','orange','rot'].forEach(p=>{
+      const el=document.getElementById('ampel-'+p);if(!el) return;
+      const active=dd>-5?'gruen':dd>-15?'gelb':dd>-30?'orange':'rot';
+      if(p===active){el.style.opacity='1';el.style.borderWidth='2px';el.style.boxShadow='0 0 12px '+col+'44';}
+      else{el.style.opacity='0.3';el.style.borderWidth='1px';el.style.boxShadow='none';}
+    });
+  }catch(e){}
 }
 
 // ── RENDER LANGZIEL ───────────────────────────────────────
@@ -2568,6 +2619,32 @@ function renderArtikel(){
 }
 
 // ── MASTER RENDER: alles auf einmal ──────────────────────
+
+function renderSofortAktionen(){
+  const DEPOT=getLiveDepot(),today=new Date(),acts=[];
+  if(typeof EX_DIV_DATES!=='undefined') EX_DIV_DATES.forEach(ev=>{
+    const d=Math.round((new Date(ev.date)-today)/864e5);
+    if(d>=0&&d<=14) acts.push({p:1,ic:'s-aktiv',bg:'b-green',bt:d?d+'d':'HEUTE!',
+      t:ev.name+': Ex-Div in '+d+(d===1?' Tag':' Tagen'),s:ev.stk+' Stk = ~'+ev.betrag.toFixed(2)+'€ → DRIP'});
+  });
+  if(typeof EARNINGS_CAL!=='undefined') EARNINGS_CAL.forEach(ev=>{
+    const pts=ev.datum.split('.');if(pts.length!==3) return;
+    const d=Math.round((new Date(pts[2]+'-'+pts[1].padStart(2,'0')+'-'+pts[0].padStart(2,'0'))-today)/864e5);
+    if(d>=0&&d<=14) acts.push({p:2,ic:'s-aktiv',bg:'b-amber',bt:d?d+'d':'Heute',t:ev.name+' Earnings '+ev.datum,s:ev.erwartet});
+  });
+  getLiveDepot().forEach(d=>{if(d.chg&&d.chg<=-3) acts.push({p:2,ic:'s-aktiv',bg:'b-red',bt:d.chg.toFixed(1)+'%',t:d.name+': '+d.chg.toFixed(1)+'% heute',s:'Kurs '+(+d.kurs).toFixed(2)+'€ · Artikel 10 prüfen'});});
+  getLiveKauf().filter(k=>k.ampel!=='done'&&k.limit&&k.kurs).forEach(k=>{
+    const a=(k.kurs-k.limit)/k.limit*100;
+    if(a>=0&&a<=2) acts.push({p:2,ic:'s-aktiv',bg:'b-blue',bt:a.toFixed(1)+'%',t:k.name+': Limit fast erreicht!',s:'Kurs '+k.kurs.toFixed(2)+'€ · Limit '+k.limit.toFixed(2)+'€'});
+    if(a<0) acts.push({p:1,ic:'s-aktiv',bg:'b-green',bt:'Kaufzone!',t:k.name+': Kaufbar!',s:'Kurs '+k.kurs.toFixed(2)+'€ unter Limit '+k.limit.toFixed(2)+'€'});
+  });
+  const drip=(typeof getDripTotal==='function')?getDripTotal():0;
+  if(drip>=50) acts.push({p:1,ic:'s-aktiv',bg:'b-green',bt:'DRIP!',t:'DRIP '+drip.toFixed(2)+'€ reinvestieren!',s:'Sukuk ETF ~'+Math.floor(drip/4.35)+' Stk'});
+  if(!acts.length) acts.push({p:9,ic:'s-todo',bg:'b-gray',bt:'OK',t:'Keine kritischen Aktionen',s:'Stand '+today.toLocaleDateString('de-DE')});
+  acts.sort((a,b)=>a.p-b.p);
+  const el=document.getElementById('sofort-aktionen-list');
+  if(el) el.innerHTML=acts.slice(0,5).map(a=>`<div class="step"><div class="step-icon ${a.ic}">→</div><div class="step-body"><div class="step-title">${a.t}</div><div class="step-sub">${a.s}</div></div><span class="badge ${a.bg}">${a.bt}</span></div>`).join('');
+}
 function renderAll(){
   const fns = [
     ['depot',       renderDepot],
@@ -2954,68 +3031,31 @@ function renderCharts(){
   // ── Heatmap: G/V alle Positionen ─────────────────────
   const hmEl = document.getElementById('ana-heatmap');
   if(hmEl){
-    const sorted = [...DEPOT].filter(d=>d.kaufkurs&&d.kaufkurs>0).sort((a,b)=>b.wert-a.wert);
-    // Grid-Spalten dynamisch nach Anzahl
-    const cols = sorted.length > 14 ? 5 : sorted.length > 8 ? 4 : 3;
-    hmEl.style.gridTemplateColumns = `repeat(${cols},1fr)`;
-    hmEl.innerHTML = sorted.map(d=>{
-      const gvPct = ((d.kurs-d.kaufkurs)/d.kaufkurs*100);
-      const gvAbs = ((d.kurs-d.kaufkurs)*d.stk).toFixed(0);
-      // Farbe: Grün-Rot-Spektrum je nach G/V
-      const intensity = Math.min(Math.abs(gvPct)/15, 1);
-      const bg = gvPct >= 0
-        ? `rgba(74,222,128,${0.15+intensity*0.55})`
-        : `rgba(248,113,113,${0.15+intensity*0.55})`;
-      const minH = Math.max(52, Math.min(90, d.wert/total*600));
-      return `<div class="heatmap-cell" style="background:${bg};height:${minH}px;"
-        onclick="openDetail('${d.name}')" title="${d.name}">
-        <div class="hm-name">${d.name.split(' ')[0]}</div>
-        <div class="hm-val">${gvPct>=0?'+':''}${gvPct.toFixed(1)}%</div>
-        <div class="hm-pct">${gvAbs>=0?'+':''}${gvAbs}€</div>
+    const sorted=[...DEPOT].filter(d=>d.kaufkurs&&d.kaufkurs>0).sort((a,b)=>b.wert-a.wert);
+    const cols=sorted.length>14?5:sorted.length>8?4:3;
+    hmEl.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+    hmEl.style.display='grid';
+    hmEl.style.gap='4px';
+    hmEl.innerHTML=sorted.map(d=>{
+      const gvP=+((d.kurs-d.kaufkurs)/d.kaufkurs*100).toFixed(1);
+      const gvA=+((d.kurs-d.kaufkurs)*d.stk).toFixed(0);
+      const it=Math.min(Math.abs(gvP)/20,1);
+      const bg=gvP>=0?`rgba(74,222,128,${(0.2+it*0.6).toFixed(2)})`:`rgba(248,113,113,${(0.2+it*0.6).toFixed(2)})`;
+      const tc=gvP>=0?'#052e10':'#4a0808';
+      const ht=Math.max(60,Math.min(100,d.wert/total*700));
+      const sn=encodeURIComponent(d.name);
+      return `<div style="background:${bg};height:${ht}px;border-radius:5px;padding:6px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;"
+        onclick="openDetail(decodeURIComponent('${sn}'))"
+        onmouseenter="this.style.filter='brightness(1.2)'"
+        onmouseleave="this.style.filter='brightness(1)'">
+        <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${tc};overflow:hidden;white-space:nowrap;">${d.name.split(' ')[0].substring(0,10)}</div>
+        <div>
+          <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${tc}">${gvP>=0?'+':''}${gvP}%</div>
+          <div style="font-family:var(--mono);font-size:9px;color:${tc};opacity:0.8">${gvA>=0?'+':''}${gvA}€</div>
+        </div>
       </div>`;
     }).join('');
   }
-}
-
-// ── SELL MECHANISM ─────────────────────────────────────────
-function populateSellDropdown(DEPOT){
-  const sel = document.getElementById('sell-pos'); if(!sel) return;
-  sel.innerHTML = '<option value="">-- Position wählen --</option>';
-  DEPOT.forEach(d=>{
-    const o = document.createElement('option');
-    o.value = d.name;
-    o.textContent = `${d.name} · ${d.stk} Stk · ${d.wert.toFixed(0)}€`;
-    sel.appendChild(o);
-  });
-  sel.onchange = () => {
-    const DEPOT2 = getLiveDepot();
-    const pos = DEPOT2.find(d=>d.name===sel.value);
-    if(!pos){ document.getElementById('sell-preview').textContent=''; return; }
-    const kursEl = document.getElementById('sell-kurs');
-    kursEl.placeholder = pos.kurs.toFixed(2)+'€ (aktuell)';
-    document.getElementById('sell-stk').placeholder = pos.stk+' (alle)';
-    document.getElementById('sell-preview').textContent =
-      `→ ${pos.name} · ${pos.stk} Stk · Kaufkurs: ${pos.kaufkurs||'—'}€ · Aktuell: ${pos.kurs.toFixed(2)}€`;
-  };
-}
-
-function executeSell(){
-  const sel  = document.getElementById('sell-pos').value;
-  const stkI = document.getElementById('sell-stk').value.trim();
-  const kursI= document.getElementById('sell-kurs').value.trim();
-  if(!sel){ showToast('⚠ Position wählen','var(--amber)'); return; }
-
-  const DEPOT2 = getLiveDepot();
-  const pos = DEPOT2.find(d=>d.name===sel);
-  if(!pos){ showToast('⚠ Position nicht gefunden','var(--amber)'); return; }
-
-  const stkVerk = stkI ? parseFloat(stkI.replace(',','.')) : pos.stk;
-  const kursVerk= kursI ? parseFloat(kursI.replace(',','.')) : pos.kurs;
-  if(isNaN(stkVerk)||isNaN(kursVerk)){ showToast('⚠ Ungültige Werte','var(--amber)'); return; }
-
-  const erloes = (stkVerk * kursVerk).toFixed(2);
-  const gewinn = (stkVerk * (kursVerk - (pos.kaufkurs||kursVerk))).toFixed(2);
-  const vollstaendig = stkVerk >= pos.stk;
 
   // Book as trade
   STATE.trades.push({
@@ -3873,160 +3913,108 @@ function runAlerts(fromLiveUpdate=false){
 
 
 // ══════════════════════════════════════════════════════════
-// LIVE-KURS-SYSTEM v2.0 — Yahoo Finance + Stooq.com + EZB Währungen
-// Kein Account · Kein API-Key · 3 Quellen kombiniert
+// SESSION B — ECHTZEIT-KURSE via allOrigins + Yahoo Finance
+// Ticker-Map: HPOS-Name → Yahoo-Ticker
 // ══════════════════════════════════════════════════════════
-
-const TICKER_MAP_V2 = {
-  'Novo-Nordisk B':             {yahoo:'NVO',     stooq:'nvo.us',  cur:'USD'},
-  'Merck & Co (MRK)':           {yahoo:'MRK',     stooq:'mrk.us',  cur:'USD'},
-  'Abbott Laboratories':        {yahoo:'ABT',     stooq:'abt.us',  cur:'USD'},
-  'Waste Management':           {yahoo:'WM',      stooq:'wm.us',   cur:'USD'},
-  'McCormick & Co':             {yahoo:'MKC',     stooq:'mkc.us',  cur:'USD'},
-  'Skyworks Solutions':         {yahoo:'SWKS',    stooq:'swks.us', cur:'USD'},
-  'EOG Resources':              {yahoo:'EOG',     stooq:'eog.us',  cur:'USD'},
-  'Texas Instruments':          {yahoo:'TXN',     stooq:'txn.us',  cur:'USD'},
-  'Barrick Mining':             {yahoo:'GOLD',    stooq:'gold.us', cur:'USD'},
-  'BHP Group':                  {yahoo:'BHP',     stooq:'bhp.us',  cur:'USD'},
-  'Rio Tinto PLC':              {yahoo:'RIO',     stooq:'rio.uk',  cur:'GBP'},
-  'Fuchs SE':                   {yahoo:'FPE3.DE', stooq:'fpe3.de', cur:'EUR'},
-  'Holcim AG':                  {yahoo:'HCMLY',   stooq:'holn.ch', cur:'CHF'},
-  'Novartis AG':                {yahoo:'NVS',     stooq:'novn.ch', cur:'CHF'},
-  'Air Liquide':                {yahoo:'AIQUY',   stooq:'ai.fr',   cur:'EUR'},
-  'Amrize':                     {yahoo:'HCMLY',   stooq:'holn.ch', cur:'CHF'},
-  'Rational AG':                {yahoo:'RAA.DE',  stooq:'raa.de',  cur:'EUR'},
-  'Xiaomi Corp.':               {yahoo:'1810.HK', stooq:'1810.hk', cur:'HKD'},
-  'Cardinal Energy':            {yahoo:'CDV.TO',  stooq:'cdv.ca',  cur:'CAD'},
-  'Savaria Corporation':        {yahoo:'SIS.TO',  stooq:'sis.ca',  cur:'CAD'},
-  'iShares MSCI World Islamic': {yahoo:'ISWD.L',  stooq:'iswd.uk', cur:'GBp'},
-  'iShares EM Islamic':         {yahoo:'ISDE.L',  stooq:'isde.uk', cur:'GBp'},
-  'iShares Sukuk ETF':          {yahoo:'SUKU.L',  stooq:'suku.uk', cur:'GBp'},
-  'iShares Gold ETC':           {yahoo:'IGLN.L',  stooq:'igln.uk', cur:'GBp'},
+const TICKER_MAP = {
+  'Novo-Nordisk B':              'NVO',
+  'Novartis AG':                 'NVS',
+  'Barrick Mining':              'GOLD',
+  'Holcim AG':                   'HCMLY',
+  'Fuchs SE':                    'FPE3.DE',
+  'Waste Management':            'WM',
+  'Air Liquide':                 'AIQUY',
+  'Rio Tinto PLC':               'RIO',
+  'Merck & Co (MRK)':            'MRK',
+  'Abbott Laboratories':         'ABT',
+  'Texas Instruments':           'TXN',
+  'Skyworks Solutions':          'SWKS',
+  'McCormick & Co':              'MKC',
+  'BHP Group':                   'BHP',
+  'Cardinal Energy':             'CDV.TO',
+  'Savaria Corporation':         'SIS.TO',
+  'iShares MSCI World Islamic':  'ISWD.L',
+  'iShares EM Islamic':          'ISDE.L',
+  'iShares Sukuk ETF':           'SUKU.L',
+  'iShares Gold ETC':            'IGLN.L',
+  'EOG Resources':               'EOG',
+  'Krones AG':                   'KRN.DE',
+  'Zoetis (ZTS)':                'ZTS',
+  'Gilead Sciences':             'GILD',
 };
-const TICKER_MAP = Object.fromEntries(
-  Object.entries(TICKER_MAP_V2).map(([k,v])=>[k,v.yahoo])
-);
 
-// ── Währungen: frankfurter.app (EZB, direkt, kein Proxy) ─────
-let FX = {USD:1.09, CHF:0.96, CAD:0.74, GBP:1.17, HKD:0.14, GBp:0.0117};
 
-async function fetchFX(){
-  try{
-    const r=await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,CHF,CAD,GBP,HKD',
-      {signal:AbortSignal.timeout(5000)});
-    if(!r.ok) return;
-    const d=await r.json();
-    if(d?.rates){
-      FX.USD=d.rates.USD||FX.USD; FX.CHF=d.rates.CHF||FX.CHF;
-      FX.CAD=d.rates.CAD||FX.CAD; FX.GBP=d.rates.GBP||FX.GBP;
-      FX.HKD=d.rates.HKD||FX.HKD; FX.GBp=FX.GBP/100;
-    }
-  }catch(e){}
+// ══════════════════════════════════════════════════════════
+// LOGOS — Yahoo Finance CDN (stabil, kostenlos, kein API-Key)
+// Format: https://logo.clearbit.com/domain.com (Fallback: Kürzel)
+// ══════════════════════════════════════════════════════════
+const LOGO_MAP = {
+  'iShares MSCI World Islamic': 'https://logo.clearbit.com/ishares.com',
+  'iShares EM Islamic':         'https://logo.clearbit.com/ishares.com',
+  'iShares Sukuk ETF':          'https://logo.clearbit.com/ishares.com',
+  'iShares Gold ETC':           'https://logo.clearbit.com/ishares.com',
+  'Novo-Nordisk B':             'https://logo.clearbit.com/novonordisk.com',
+  'Novartis AG':                'https://logo.clearbit.com/novartis.com',
+  'Merck & Co (MRK)':           'https://logo.clearbit.com/merck.com',
+  'Abbott Laboratories':        'https://logo.clearbit.com/abbott.com',
+  'Skyworks Solutions':         'https://logo.clearbit.com/skyworksinc.com',
+  'Savaria Corporation':        'https://logo.clearbit.com/savaria.com',
+  'Holcim AG':                  'https://logo.clearbit.com/holcim.com',
+  'Fuchs SE':                   'https://logo.clearbit.com/fuchs.com',
+  'Waste Management':           'https://logo.clearbit.com/wm.com',
+  'Air Liquide':                'https://logo.clearbit.com/airliquide.com',
+  'McCormick & Co':             'https://logo.clearbit.com/mccormick.com',
+  'Amrize':                     'https://logo.clearbit.com/holcim.com',
+  'Barrick Mining':             'https://logo.clearbit.com/barrick.com',
+  'Rio Tinto PLC':              'https://logo.clearbit.com/riotinto.com',
+  'BHP Group':                  'https://logo.clearbit.com/bhp.com',
+  'Xiaomi Corp.':               'https://logo.clearbit.com/mi.com',
+  'Rational AG':                'https://logo.clearbit.com/rational-online.com',
+  'EOG Resources':              'https://logo.clearbit.com/eogresources.com',
+  'Cardinal Energy':            'https://logo.clearbit.com/cardinalenergy.ca',
+};
+
+// Logo-HTML generieren (mit Fallback auf Kürzel-Box)
+function logoHtml(name, size=22){
+  const url = LOGO_MAP[name];
+  const abbr = name.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
+  if(!url) return `<span class="logo-fallback" style="width:${size}px;height:${size}px">${abbr}</span>`;
+  return `<img class="stock-logo" src="${url}" width="${size}" height="${size}"
+    alt="${abbr}" loading="lazy"
+    onerror="this.outerHTML='<span class=\"logo-fallback\" style=\"width:${size}px;height:${size}px\">${abbr}</span>'"
+    style="width:${size}px;height:${size}px">`;
 }
 
-function toEUR(price, cur){
-  const p=+price; if(!p||isNaN(p)) return null;
-  switch(cur){
-    case 'EUR': return +(p).toFixed(4);
-    case 'USD': return +(p/FX.USD).toFixed(4);
-    case 'CHF': return +(p/FX.CHF).toFixed(4);
-    case 'CAD': return +(p/FX.CAD).toFixed(4);
-    case 'GBP': return +(p/FX.GBP).toFixed(4);
-    case 'GBp': return +(p/(FX.GBP*100)).toFixed(4);
-    case 'HKD': return +(p/FX.HKD).toFixed(4);
-    default:    return +(p/FX.USD).toFixed(4);
-  }
-}
 
-// ── Quelle 1: Yahoo Finance via allOrigins Proxy ──────────────
-async function fetchOneTicker(ticker){ return fetchYahoo(ticker); }
-async function fetchYahoo(ticker){
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`;
-  const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-  try{
-    const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-    if(!r.ok) return null;
-    const j=await r.json();
-    const meta=JSON.parse(j.contents)?.chart?.result?.[0]?.meta;
-    if(!meta?.regularMarketPrice) return null;
-    return {price:meta.regularMarketPrice, prevClose:meta.previousClose||meta.regularMarketPrice,
-            currency:meta.currency||'USD', source:'Yahoo'};
-  }catch(e){return null;}
-}
+// EUR/USD für Umrechnung
+const EUR_TICKER = 'EURUSD=X';
 
-// ── Quelle 2: Stooq.com CSV — Fallback für DE/CH/CA ──────────
-async function fetchStooq(ticker, cur){
-  const url=`https://stooq.com/q/l/?s=${ticker}&f=sd2t2ohlcv&h&e=csv`;
-  const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-  try{
-    const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-    if(!r.ok) return null;
-    const j=await r.json();
-    const parts=(j.contents||'').trim().split('\n')[1]?.split(',');
-    if(!parts) return null;
-    const close=parseFloat(parts[6]);
-    if(!close||isNaN(close)||close<=0) return null;
-    return {price:close, prevClose:parseFloat(parts[3])||close, currency:cur, source:'Stooq'};
-  }catch(e){return null;}
-}
-
-// ── Kombiniert: Yahoo → Stooq Fallback ───────────────────────
-async function fetchKurs(name){
-  const cfg=TICKER_MAP_V2[name]; if(!cfg) return null;
-  let res=await fetchYahoo(cfg.yahoo);
-  if(!res?.price) res=await fetchStooq(cfg.stooq, cfg.cur);
-  if(!res?.price) return null;
-  const cur=res.currency||cfg.cur;
-  const eur=toEUR(res.price, cur);
-  const prev=toEUR(res.prevClose||res.price, cur);
-  if(!eur) return null;
-  return {priceEUR:eur, chgPct:prev?+((eur-prev)/prev*100).toFixed(2):0, source:res.source};
-}
-
-// ── Variablen ─────────────────────────────────────────────────
-let LIVE_KURSE={}, LIVE_CHG={}, LIVE_SOURCE={};
-let EUR_USD=1.09, lastFetch=null, fetchRunning=false;
-
-// ── Haupt-Refresh ─────────────────────────────────────────────
-async function fetchLiveKurse(manual=false){
-  if(fetchRunning) return;
-  if(!manual && lastFetch && (Date.now()-lastFetch.getTime())<8*60*1000) return;
-  fetchRunning=true; setRefreshState(true);
-  try{
-    await fetchFX();
-    EUR_USD=FX.USD;
-    const names=Object.keys(TICKER_MAP_V2);
-    const BATCH=4;
-    let ok=0, fail=0;
-    for(let i=0;i<names.length;i+=BATCH){
-      const batch=names.slice(i,i+BATCH);
-      const res=await Promise.all(batch.map(n=>fetchKurs(n)));
-      batch.forEach((name,idx)=>{
-        if(!res[idx]){fail++;return;}
-        LIVE_KURSE[name]=res[idx].priceEUR;
-        LIVE_CHG[name]=res[idx].chgPct;
-        LIVE_SOURCE[name]=res[idx].source;
-        ok++;
-      });
-      if(i+BATCH<names.length) await new Promise(r=>setTimeout(r,500));
-    }
-    Object.entries(LIVE_KURSE).forEach(([n,k])=>{STATE.kurse[n]=k;});
-    lastFetch=new Date();
-    renderAll(); renderTradesLog();
-    if(document.getElementById('p-charts')?.classList.contains('active')) renderCharts();
-    try{runAlerts(true);}catch(e){}
-    const time=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-    showToast(`✅ ${ok} Kurse · EUR/USD ${FX.USD.toFixed(3)} · ${time}${fail?' · '+fail+' fehlen':''}`);
-    const badge=document.getElementById('kurs-source-badge');
-    if(badge){badge.textContent=`${ok} Kurse · ${time}`;badge.style.color=fail>3?'var(--amber)':'var(--green)';}
-  }catch(e){showToast('⚠ Kurse nicht verfügbar','var(--amber)');}
-  finally{fetchRunning=false; setRefreshState(false);}
-}
+let LIVE_KURSE = {};     // name → kurs in EUR
+let LIVE_CHG   = {};     // name → chg%
+let EUR_USD    = 1.09;   // Fallback
+let lastFetch  = null;
+let fetchRunning = false;
 
 function setRefreshState(loading){
-  const btn=document.getElementById('refresh-btn'); if(!btn) return;
-  btn.textContent=loading?'⟳ ...':'⟳ Live';
-  btn.disabled=loading; btn.style.opacity=loading?'0.6':'1';
+  const btn = document.getElementById('refresh-btn');
+  const dot = document.getElementById('live-status-dot');
+  if(!btn||!dot) return;
+  if(loading){
+    btn.textContent = '⟳ ...';
+    btn.style.opacity = '0.5';
+    dot.style.background = 'var(--amber)';
+    dot.style.boxShadow = '0 0 8px var(--amber)';
+  } else {
+    btn.textContent = '⟳ Live';
+    btn.style.opacity = '1';
+    dot.style.background = 'var(--green)';
+    dot.style.boxShadow = '0 0 8px var(--green)';
+    const now = new Date();
+    const ts = now.toLocaleDateString('de-DE') + ' · ' + now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    const el = document.getElementById('live-timestamp');
+    if(el) el.textContent = ts + ' · Live ✅';
+    lastFetch = now;
+  }
 }
 
 function setRefreshError(){
@@ -5160,8 +5148,8 @@ function renderAnalyse(){
     amount: -(parseFloat(String(t.total||0).replace(/[^0-9.]/g,''))||0),
     date:   t.ts.split('.').reverse().join('-')
   }));
+  if(cashflows.filter(c=>c.amount<0).length<2){getLiveKauf().filter(k=>k.ampel==='done'&&k.kaufdatum&&k.kaufdatum!=='—').forEach(k=>{const p=k.kaufdatum.split('.');if(p.length===3) cashflows.push({amount:-(k.budget||k.kurs*k.stk),date:p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')});});}
   cashflows.push({amount: total, date: new Date().toISOString().split('T')[0]});
-
   const xirr = cashflows.length >= 2 ? calcXIRR(cashflows) : null;
   const simpleGV = DEPOT.reduce((s,d)=>s+(d.kaufkurs?(d.kurs-d.kaufkurs)*d.stk:0),0);
   const simpleBase = DEPOT.reduce((s,d)=>s+(d.kaufkurs?d.kaufkurs*d.stk:d.wert),0);
